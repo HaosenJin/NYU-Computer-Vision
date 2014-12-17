@@ -280,3 +280,27 @@ end
 figure;
 imagesc(disparity_map);
 
+
+%% Final project (17th Dec):
+matching_error_black=cell(60,1);
+matching_error_black=get_matching_cost(img_left,left_vector_full,right_vector_full);
+
+% % normalize the error
+for k=1:60  % row by row
+matching_error_normalized=normalize_matching_error(matching_error_black{k,1});
+
+% % use max flow
+cutpath=final_graph_cut(matching_error_normalized);
+
+
+
+end
+
+
+
+
+
+
+
+
+
