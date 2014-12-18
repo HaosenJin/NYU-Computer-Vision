@@ -2,17 +2,31 @@ function   [isU, isV, i,j]=A2uv(node_name)
 % % map U_label and V_label to node indices (in the A matrix)
 
 
-row_ind=floor(node_name/88)+1;
-column_ind=rem(node_name,88);
+row_ind=floor(node_name/88); % 0 1 2 3     floor(1/2*  ): 0 0 1 1 ...
+column_ind=rem(node_name,88);%  
 
-if mod(row_ind,2) == 0
+if rem(row_ind,2) == 0  && column_ind~=0    % 0 1 0 1 0
+    isV=0; isU=1;
+
+elseif rem(row_ind,2) == 1 && column_ind~=0
+
     isV=1; isU=0;
-else isV=0; isU=1;
-
+    
+elseif rem(row_ind,2) == 1 && column_ind==0
+    isV=0; isU=1;
+elseif rem(row_ind,2) == 0 && column_ind==0  
+    isV=1; isU=0;
+    
+    
 end
 
-     i=row_ind;
-    j=column_ind;
+if column_ind==0    
+    j=88; i=floor(row_ind/2);
+
+else
+    j=column_ind; i=floor(row_ind/2)+1;
+
+end
 
 
 
