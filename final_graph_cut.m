@@ -1,4 +1,4 @@
-function cutpath=final_graph_cut(matching_error_normalized)
+% function cutpath=final_graph_cut(matching_error_normalized)
 
 numPixel = size(matching_error_normalized,1);
 
@@ -7,21 +7,6 @@ disp('building graph');
 N = numPixel^2*2;
 
 A=sparse(N,N);
-U_label=zeros(88,88,2); % each node has two sub indices 00 01 ...
-V_label=zeros(88,88,2);
-
-for l=1:88
-    for r=1:88
-        
-        U_label(l,r,1)=r-1;  % 1st subindex, left
-        U_label(l,r,2)=l-1;   %2nd subindex, right
-        
-        V_label(l,r,1)=l-1;
-        V_label(l,r,2)=r-1;
-   
-    end
-end
-
 
  
 
@@ -29,60 +14,118 @@ for i=1:88
     for j=1:88
         node_name_u=uv2A(1,0,i,j);
         node_name_v=uv2A(0,1,i,j);
-        A(node_name_u,node_name_v)=matching_error_normalized(i,j);
+        A(node_name_u,node_name_v)=matching_error_normalized(i,j);  % little black line
         
     end
 end
 
 
+% little gray line, from U to V
+mu=13;
 
+for i=1:87
+    for j=1:88
+        node_name_u=uv2A(1,0,i,j);
+        node_name_v=uv2A(0,1,i+1,j);
+        A(node_name_u,node_name_v)=mu;  
+        A(node_name_v,node_name_u)=mu;  % little gray line
 
+    end
+end
 
-
-
-    
+% little gray line, from V to U
 for i=1:88
-    A(i,i+88)=matching_error_normalized(i,i);
-    
+    for j=1:87
+        node_name_u=uv2A(1,0,i,j+1);
+        node_name_v=uv2A(0,1,i,j);
+        A(node_name_u,node_name_v)=mu;  % little gray line
+        A(node_name_v,node_name_u)=mu;  
+
+    end
 end
 
 
+% dash line, from U to U and from V to V
+% horizontal dash
+for i=1:87
+    for j=2:88
+        node_name_u1=uv2A(1,0,i,j);
+        node_name_u2=uv2A(1,0,i+1,j);
+        A(node_name_u1,node_name_u2)=35;  
 
-% construct graph
-E = edges4connected(height,width);
-V = abs(m(E(:,1))-m(E(:,2)))+eps;
-A = sparse(E(:,1),E(:,2),V,N,N,4*N);
+    end
+end
 
-% terminal weights
-% connect source to leftmost column.
-% connect rightmost column to target.
-T = sparse([(1:height)';(N-height+1:N)'],[ones(height,1);ones(height,1)*2],ones(2*height,1)*9e9);
+for i=1:87
+    for j=1:87        
+        node_name_v1=uv2A(0,1,i,j);
+        node_name_v2=uv2A(0,1,i+1,j);
+        A(node_name_v1,node_name_v2)=35;  % dash line
 
-% T = sparse([(1:height)';(N-87+1:N)'],[ones(87,1);ones(87,1)*2],ones(2*87,1)*9e9);
-% T=sparse(N,2,0);
+    end
+end
+
+% vertical dash
+for i=1:87
+    for j=88:-1:2
+        node_name_u1=uv2A(1,0,i,j);
+        node_name_u2=uv2A(1,0,i,j-1);
+
+        A(node_name_u1,node_name_u2)=35;  
+
+    end
+end
+for i=2:88
+    for j=88:-1:2
+        node_name_v1=uv2A(0,1,i,j);
+        node_name_v2=uv2A(0,1,i,j-1);
+
+        A(node_name_v1,node_name_v2)=35;  % dash line
+
+
+    end
+end
+
+
+T=sparse(N,2);
+
+% % left image T(:,1)
+% % rigt image T(:,2)
+
+thresh_gray=100;
+for j=1:88
+        node_name_vleft=uv2A(0,1,1,j);
+
+        T(node_name_vleft,2)=thresh_gray;  
+end
+
+
+for i=1:88
+        node_name_vup=uv2A(0,1,i,88);
+        T(node_name_vup,2)=thresh_gray;  
+end
+
+
+for j=1:88
+        node_name_udown=uv2A(1,0,1,j);
+        T(node_name_udown,1)=thresh_gray;  
+end
+
+for i=1:88
+        node_name_uright=uv2A(1,0,i,88);
+        T(node_name_uright,1)=thresh_gray; 
+end
+
 
 disp('calculating maximum flow');
 
 [flow,labels] = maxflow(A,T);
-labels = reshape(labels,height,width);
-
-figure
-imagesc(labels); title('labels');
-
-
-%% 
-test_image=zeros(size(m));
-test_image(:,1:140)=10;
-
-test_image(:,141:end)=250;
-
-figure;
-imagesc(test_image);
-
-
-m=test_image;
-
-
+% labels = reshape(A,N,N);
+% 
+% figure
+% imagesc(labels); title('labels');
+% 
+% 
 
 
 
