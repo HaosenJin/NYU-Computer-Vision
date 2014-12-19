@@ -264,7 +264,7 @@ fake_s_e_std=sqrt(var(scatter_error_noma));
 % load scatter_vectors_full.mat;
 cost=cell(60,88);
 range_disp=cell(60,88);  % the j locations the rigth image
-[cost,range_disp]=hw3b_graph_cut(img_left,d_l,left_vector_full,right_vector_full);
+[cost,range_disp]=hw3b_q1(img_left,d_l,left_vector_full,right_vector_full);
 
 disparity_map=ones(60,88)*10000;
 for i=1:60
@@ -279,25 +279,54 @@ end
 
 figure;
 imagesc(disparity_map);
+title('disparity from smallest cost','fonts',18);
 
 
 %% Final project (17th Dec):
-matching_error_black=cell(60,1);
-matching_error_black=get_matching_cost(img_left,left_vector_full,right_vector_full);
+% matching_error_black=cell(60,1);
+% matching_error_black=get_matching_cost(img_left,left_vector_full,right_vector_full);
+% 
+% save matching_error_black.mat matching_error_black;
+load matching_error_black.mat ;
 
-% % normalize the error
+img_left_small=imresize(img_left,[60 88]);
+img_right_small=imresize(img_right,[60 88]);
+contrast_left=zeros(60,87);
+contrast_left=abs(img_left_small(:,1:end-1)-img_left_small(:,2:end));
+contrast_right=zeros(60,87);
+contrast_right=abs(img_right_small(:,1:end-1)-img_right_small(:,2:end));
+
+% figure
+% imagesc(cotrast_right)
+% title('contrast','fonts',18);
+
+%% normalize the error
+disparity=zeros(60,88);
+flow=zeros(60,1);
 for k=1:60  % row by row
-matching_error_normalized=normalize_matching_error(matching_error_black{k,1});
-
-% % use max flow
-cutpath=final_graph_cut(matching_error_normalized);
-
-
+% matching_error_normalized=normalize_matching_error(matching_error_black{23,1});
+matching_error=matching_error_black{k,1};
+matching_error_normalized=matching_error;
+[disparity(k,:),flow(k)]=final_graph_cut(matching_error_normalized,contrast_left(k,:),contrast_right(k,:),k);
 
 end
 
+disparity2=disparity;
+[occlu_r,occlu_c]=find(disparity2==23444);
 
+disparity2(disparity2==23444)=1;
+disparity2(disparity2>0) = disparity2(disparity2>0)*32;
 
+disparity2(disparity2>250)=250;
+
+occlusion=ones(size(disparity));
+figure;
+imagesc(disparity2); hold on; 
+title('disparity map /200','fonts',18); 
+
+% % figure;
+% occlusion(occlu_r,occlu_c)=100000; imagesc(occlusion);
+% title('occlusion area','fonts',18); 
 
 
 
